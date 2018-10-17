@@ -7,6 +7,7 @@ module Kinto exposing
     , sort, limit, filter, Filter(..)
     , Endpoint(..), endpointUrl, ErrorDetail, Error(..), extractError, toResponse
     , send, toRequest
+    , groupResource
     )
 
 {-| [Kinto](http://www.kinto-storage.org/) client to ease communicating with
@@ -33,6 +34,7 @@ Plural (list) endpoints are:
 
   - buckets: `buckets/`
   - collections: `buckets/:bucketId/collections/`
+  - groups: `buckets/:bucketId/groups/`
   - records: `buckets/:bucketId/collections/:collectionId/records/`
 
 Item endpoints are:
@@ -128,6 +130,10 @@ type alias CollectionName =
     String
 
 
+type alias GroupName =
+    String
+
+
 type alias RecordId =
     String
 
@@ -143,6 +149,8 @@ type Endpoint
     | BucketEndpoint BucketName
     | CollectionListEndpoint BucketName
     | CollectionEndpoint BucketName CollectionName
+    | GroupListEndpoint BucketName
+    | GroupEndpoint BucketName GroupName
     | RecordListEndpoint BucketName CollectionName
     | RecordEndpoint BucketName CollectionName RecordId
 
@@ -209,6 +217,15 @@ collectionResource bucket decoder =
     Resource
         (CollectionEndpoint bucket)
         (CollectionListEndpoint bucket)
+        (decodeData decoder)
+        (decodeData (Decode.list decoder))
+
+
+groupResource : BucketName -> Decode.Decoder a -> Resource a
+groupResource bucket decoder =
+    Resource
+        (GroupEndpoint bucket)
+        (GroupListEndpoint bucket)
         (decodeData decoder)
         (decodeData (Decode.list decoder))
 
@@ -397,6 +414,12 @@ endpointUrl baseUrl endpoint =
 
         CollectionEndpoint bucketName collectionName ->
             joinUrl [ url, "buckets", bucketName, "collections", collectionName ]
+
+        GroupListEndpoint bucketName ->
+            joinUrl [ url, "buckets", bucketName, "groups" ]
+
+        GroupEndpoint bucketName groupName ->
+            joinUrl [ url, "buckets", bucketName, "groups", groupName ]
 
         RecordListEndpoint bucketName collectionName ->
             joinUrl [ url, "buckets", bucketName, "collections", collectionName, "records" ]
