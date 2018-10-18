@@ -7,7 +7,7 @@ module Kinto exposing
     , sort, limit, filter, Filter(..)
     , Endpoint(..), endpointUrl, ErrorDetail, Error(..), extractError, toResponse
     , send, toRequest
-    , accountsResource, groupResource
+    , BucketName, CollectionName, GroupName, RecordId, UserId, accountsResource, groupResource
     )
 
 {-| [Kinto](http://www.kinto-storage.org/) client to ease communicating with
