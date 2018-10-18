@@ -7,7 +7,7 @@ module Kinto exposing
     , sort, limit, filter, Filter(..)
     , Endpoint(..), endpointUrl, ErrorDetail, Error(..), extractError, toResponse
     , send, toRequest
-    , groupResource
+    , accountsResource, groupResource
     )
 
 {-| [Kinto](http://www.kinto-storage.org/) client to ease communicating with
@@ -33,6 +33,7 @@ that in details.
 Plural (list) endpoints are:
 
   - buckets: `buckets/`
+  - accounts: `accounts/`
   - collections: `buckets/:bucketId/collections/`
   - groups: `buckets/:bucketId/groups/`
   - records: `buckets/:bucketId/collections/:collectionId/records/`
@@ -126,6 +127,10 @@ type alias BucketName =
     String
 
 
+type alias UserId =
+    String
+
+
 type alias CollectionName =
     String
 
@@ -147,6 +152,8 @@ type Endpoint
     = RootEndpoint
     | BucketListEndpoint
     | BucketEndpoint BucketName
+    | AccountsListEndpoint
+    | AccountEndpoint UserId
     | CollectionListEndpoint BucketName
     | CollectionEndpoint BucketName CollectionName
     | GroupListEndpoint BucketName
@@ -203,6 +210,15 @@ bucketResource decoder =
     Resource
         BucketEndpoint
         BucketListEndpoint
+        (decodeData decoder)
+        (decodeData (Decode.list decoder))
+
+
+accountsResource : Decode.Decoder a -> Resource a
+accountsResource decoder =
+    Resource
+        AccountEndpoint
+        AccountsListEndpoint
         (decodeData decoder)
         (decodeData (Decode.list decoder))
 
@@ -408,6 +424,12 @@ endpointUrl baseUrl endpoint =
 
         BucketEndpoint bucketName ->
             joinUrl [ url, "buckets", bucketName ]
+
+        AccountsListEndpoint ->
+            joinUrl [ url, "accounts" ]
+
+        AccountEndpoint userId ->
+            joinUrl [ url, "accounts", userId ]
 
         CollectionListEndpoint bucketName ->
             joinUrl [ url, "buckets", bucketName, "collections" ]
