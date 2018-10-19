@@ -7,7 +7,7 @@ module Kinto exposing
     , sort, limit, filter, Filter(..)
     , Endpoint(..), endpointUrl, ErrorDetail, Error(..), extractError, toResponse
     , send, toRequest
-    , BucketName, CollectionName, GroupName, RecordId, UserId, accountsResource, groupResource
+    , BucketName, CollectionName, GroupName, RecordId, UserId, accountsResource, createWithPermissions, groupResource
     )
 
 {-| [Kinto](http://www.kinto-storage.org/) client to ease communicating with
@@ -768,6 +768,20 @@ create resource body clientInstance =
         |> HttpBuilder.post
         |> HttpBuilder.withHeaders clientInstance.headers
         |> HttpBuilder.withJsonBody (encodeData body)
+        |> HttpBuilder.withExpect (Http.expectJson resource.itemDecoder)
+
+
+createWithPermissions : Resource a -> Body -> Encode.Value -> Client -> Request a
+createWithPermissions resource body permissions clientInstance =
+    endpointUrl clientInstance.baseUrl resource.listEndpoint
+        |> HttpBuilder.post
+        |> HttpBuilder.withHeaders clientInstance.headers
+        |> HttpBuilder.withJsonBody
+            (Encode.object
+                [ ( "data", body )
+                , ( "permissions", permissions )
+                ]
+            )
         |> HttpBuilder.withExpect (Http.expectJson resource.itemDecoder)
 
 
